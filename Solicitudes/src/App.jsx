@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Verification from './components/Verification'
+import Home from './components/Home'
+import Form from './components/Form'
+import Error from './components/Error'
 import './index.css'
 
 function App() {
   const [home, setHome] = useState(false); 
+  const [form, setForm] = useState(false);
   const [error, setError] = useState(false);
   const [backgroundUrl, setBackgroundUrl] = useState('/fondoDARK.webp');
 
@@ -18,13 +22,23 @@ function App() {
       </div>
       <div className="relative z-20 h-full">
         <Routes>
+          {home && 
+          (
+            <Route path="/home" element={<Home />}/>
+          )}
+          
+          {form && 
+          (
+            <Route path="/form" element={<Form/>} />
+          )}
+
           <Route 
             path="/"
-            element={<Verification home={home} enableHome={setHome} setBackgroundUrl={setBackgroundUrl} />}
+            element={<Verification home={home} enableHome={setHome} setBackgroundUrl={setBackgroundUrl} enableForm={setForm}/>}
           /> 
           <Route 
             path='*' 
-            element={<h1>Page not found</h1>} 
+            element={<Error/>} 
           />
         </Routes>
       </div>

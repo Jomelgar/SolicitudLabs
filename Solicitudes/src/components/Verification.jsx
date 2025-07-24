@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-  import { useNavigate } from 'react-router-dom';
-  import { Modal, Button } from 'antd';
-  import { ExclamationCircleOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
-  import 'antd/dist/reset.css';
+import { useNavigate } from 'react-router-dom';
+import { Modal, Button } from 'antd';
+import { ExclamationCircleOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import 'antd/dist/reset.css';
+import supabase from '../utils/supabaseClient';
+import Application from './Application.jsx';
 
-  import Application from './Application.jsx';
-
-  function Verification({ enableHome }) {
+  function Verification({ enableHome, enableForm}) {
       const [process, setProcess] = useState(false);
       const [login, setLogin] = useState(false);
       const [email, setEmail] = useState('');
@@ -15,8 +15,20 @@ import { useEffect, useState } from 'react';
       const [password, setPassword] = useState('');
       const navigate = useNavigate();
 
+      useEffect(() => {enableHome(false); enableForm(false)},[])
+
       useEffect(() => {
-          setLogin(email === 'winder.matamoros@unitec.edu');
+          const fetchUser = async () => {
+            const {data, error} = await supabase.from('user').select('*').eq('email', email);
+            if(data.length > 0)
+            {
+              setLogin(true);
+            }else
+            {
+              setLogin(false);
+            }
+        }
+          fetchUser();
       }, [email]);
 
       const handleVerification = () => {
@@ -26,6 +38,17 @@ import { useEffect, useState } from 'react';
               setShowModal(true);
           }
       };
+
+      const handleLogin = async() => {
+        const {data,error} = await supabase.from('user').select('*').eq('email', email).eq('password', password);
+        if(data.length > 0)
+        {
+          enableHome(true);
+          setEmail('');
+          setPassword('');
+          navigate('/home');
+        }
+      }
 
       return (
         <div className="flex items-center justify-center min-h-screen px-2">
@@ -61,18 +84,19 @@ import { useEffect, useState } from 'react';
           </Modal>
 
           <div className="bg-white w-full max-w-xl flex flex-col items-center justify-center relative rounded-xl py-8 px-4 shadow-lg">
-            <h1 className="text-3xl mb-3 md:text-4xl font-extrabold mb-2 text-center">
+            <h1 className="text-3xl mb-3 md:text-4xl font-extrabold mb-2 text-center text-blue-500">
               Solicitud de Laboratorios
             </h1>
-            <p className="text-base md:text-md max-w-sm text-gray-700 mb-5 text-center mb-4">
+            <p className="text-base md:text-md max-w-2sm text-gray-700 mb-10 font-semibold text-center mb-4">
               Ingrese su correo institucional y luego verifique su cuenta.
             </p>
             <input
               type="email"
               placeholder="Ejemplo@unitec.edu"
               value={email}
+              disabled={process}
               onChange={(e) => setEmail(e.target.value)}
-              className="border border-gray-300 rounded-md p-2 mb-4 w-[90%]"
+              className="px-5 border border-gray-300 rounded-md p-2 w-[90%]"
             />
             {login ? (
               <>
@@ -93,12 +117,15 @@ import { useEffect, useState } from 'react';
                     {showPassword ? <EyeInvisibleOutlined  /> : <EyeOutlined />}
                   </button>
                 </div>
-                <button className="bg-blue-800 hover:bg-blue-500 text-white rounded-md p-2 w-full max-w-xs mx-auto">
+                <button 
+                  className="bg-blue-800 hover:bg-blue-500 text-white rounded-md p-2 w-full max-w-xs mx-auto"
+                  onClick={(handleLogin)}  
+                >
                   Ingresar
                 </button>
               </>
             ) : (
-              <Application handleVerification={handleVerification} process={process} enableHome={enableHome}/>
+              <Application handleVerification={handleVerification} process={process} enableForm ={enableForm}/>
             )}
           </div>
         </div>

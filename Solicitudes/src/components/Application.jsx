@@ -5,7 +5,7 @@ import { ExclamationCircleOutlined, EyeOutlined, EyeInvisibleOutlined } from '@a
 import 'antd/dist/reset.css';
 
 
-function Application({handleVerification,process, enableHome})
+function Application({handleVerification,process, enableForm})
 {
     const navigate = useNavigate();
 
@@ -21,16 +21,20 @@ function Application({handleVerification,process, enableHome})
     {
         if(code === verification)
         {
-            enableHome(true);
+            enableForm(true);
             setVerification('');
-            navigate('/home');
+            navigate('/form');
             console.log("Code verified successfully!");
+        }else
+        {
+            setTried(true);
         }
     }
 
     const [code, setCode] = useState();
     const [verification, setVerification] = useState('');
- 
+    const [tried,setTried] = useState(false);
+
     useEffect(() => 
         {
             createCode();
@@ -38,14 +42,17 @@ function Application({handleVerification,process, enableHome})
 
     return (
        <div className='w-full flex items-center justify-center flex-col mt-3'>
-         <button
-              className='bg-blue-800 hover:bg-blue-500 text-white rounded-md p-2 w-[60%]'
+        {!process && 
+        (
+            <button
+              className='mt-5 bg-blue-800 hover:bg-blue-500 text-white rounded-md p-2 w-[60%]'
               onClick={handleVerification}
             >
               Enviar verificación
-        </button>
+            </button>
+        )}
         {process && (
-          <div className='flex flex-col items-center mt-4 w-full max-w-md mt-5'>
+          <div className='flex flex-col items-center mt-4 w-full max-w-md mt-1'>
             <p className='text-gray-700 mt-2  text-sm text-center'>
             Verificación enviada. Por favor, revise su correo e ingrese el siguiente código.
             </p>
@@ -64,6 +71,7 @@ function Application({handleVerification,process, enableHome})
             >
                 Verificar código
             </button>
+            {tried && (<p className='text-red-500 text-center w-full text-xs mt-3'>Has intentado verificar el código incorrectamente. Por favor, inténtalo de nuevo.</p>)}
             </div>
         </div>
         )}
