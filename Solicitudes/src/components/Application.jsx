@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Modal, Button } from 'antd';
 import { ExclamationCircleOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
+import sendVerificationCode from '../utils/email'
+import { send } from 'emailjs-com';
 
 
-function Application({handleVerification,process, enableForm})
+function Application({handleVerification,process, enableForm, email})
 {
     const navigate = useNavigate();
-
     const createCode = () => 
     {
         const generatedCode = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -27,7 +28,8 @@ function Application({handleVerification,process, enableForm})
             console.log("Code verified successfully!");
         }else
         {
-            setTried(true);
+            setTried(false);
+            sendVerificationCode(email,verification);
         }
     }
 
@@ -39,6 +41,15 @@ function Application({handleVerification,process, enableForm})
         {
             createCode();
         },[]);
+
+    useEffect(() =>
+    {
+        if(process && email.trim() !== '')
+        {
+            setTried(false);
+            sendVerificationCode(email, code);
+        }
+    },[code,process]);
 
     return (
        <div className='w-full flex items-center justify-center flex-col mt-3'>
@@ -63,7 +74,7 @@ function Application({handleVerification,process, enableForm})
                 value={verification}
                 onChange={(e) => setVerification(e.target.value.toUpperCase())}
                 placeholder="Código de verificación"
-                className="border border-gray-300 rounded-md p-2 mb-2 w-full text-center tracking-widest text-sm"
+                className="border border-gray-300 rounded-md p-2 mb-2  w-full text-center tracking-widest text-sm"
             />
             <button 
                 className=" bg-blue-700 hover:bg-blue-300 text-white text-xs w-[70%] rounded-md p-2 mt-2 transition"

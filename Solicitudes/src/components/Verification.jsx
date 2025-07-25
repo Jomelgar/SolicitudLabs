@@ -4,6 +4,7 @@ import { Modal, Button } from 'antd';
 import { ExclamationCircleOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import supabase from '../utils/supabaseClient';
+import * as EmailValidator from 'email-validator';
 import Application from './Application.jsx';
 
   function Verification({ enableHome, enableForm}) {
@@ -33,7 +34,12 @@ import Application from './Application.jsx';
 
       const handleVerification = () => {
           if (email.includes('@unitec.edu')) {
-              setProcess(true);
+              if(EmailValidator.validate(email)) {
+                  setProcess(true);
+              }else 
+              {
+                  setShowModal(true);
+              }
           } else {
               setShowModal(true);
           }
@@ -88,7 +94,8 @@ import Application from './Application.jsx';
               Solicitud de Laboratorios
             </h1>
             <p className="text-base md:text-md max-w-2sm text-gray-700 mb-10 font-semibold text-center mb-4">
-              Ingrese su correo institucional y luego verifique su cuenta.
+              {login ? 'Ingrese su correo institucional y contraseña para ingresar.'
+              : 'Ingrese su correo institucional y luego verifique su cuenta.'}
             </p>
             <input
               type="email"
@@ -96,11 +103,11 @@ import Application from './Application.jsx';
               value={email}
               disabled={process}
               onChange={(e) => setEmail(e.target.value)}
-              className="px-5 border border-gray-300 rounded-md p-2 w-[90%]"
+              className="px-5 border border-gray-300 rounded-md mt-4 p-2 w-[90%]"
             />
             {login ? (
               <>
-                <div className="relative w-[90%] mb-4 flex items-center">
+                <div className="relative w-[90%] mb-8 mt-8 flex items-center">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Contraseña"
@@ -125,7 +132,7 @@ import Application from './Application.jsx';
                 </button>
               </>
             ) : (
-              <Application handleVerification={handleVerification} process={process} enableForm ={enableForm}/>
+              <Application handleVerification={handleVerification} process={process} enableForm ={enableForm} email={email}/>
             )}
           </div>
         </div>

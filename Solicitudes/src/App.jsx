@@ -8,7 +8,7 @@ import './index.css'
 
 function App() {
   const [home, setHome] = useState(false); 
-  const [form, setForm] = useState(false);
+  const [form, setForm] = useState(true);
   const [error, setError] = useState(false);
   const [backgroundUrl, setBackgroundUrl] = useState('/fondoDARK.webp');
 
@@ -20,7 +20,7 @@ function App() {
         <div className="absolute top-0 left-[0%]  w-1/5 h-[100vh] bg-gradient-to-r from-blue-900 via-blue-200 to-transparent opacity-5 animate-sweep z-20 pointer-events-none" />
         <div className="absolute top-0 left-[0%]  w-1/5 h-[100vh] bg-gradient-to-l from-blue-900 via-blue-200 to-transparent opacity-5 animate-sweep z-20 pointer-events-none" />
       </div>
-      <div className="relative z-20 h-full">
+      <div className="relative z-20 h-full w-full">
         <Routes>
           {home && 
           (
