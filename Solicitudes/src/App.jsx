@@ -8,7 +8,7 @@ import './index.css'
 
 function App() {
   const [home, setHome] = useState(false); 
-  const [form, setForm] = useState(true);
+  const [form, setForm] = useState(false);
   const [error, setError] = useState(false);
   const [backgroundUrl, setBackgroundUrl] = useState('/fondoDARK.webp');
 

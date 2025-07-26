@@ -16,7 +16,7 @@
     "dotenv": "^17.2.0",
     "email-validator": "^2.0.4",
     "emailjs-com": "^3.2.0",
-    "jspdf": "^3.0.1",
+    "html2pdf.js": "^0.10.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.0",
