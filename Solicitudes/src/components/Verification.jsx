@@ -89,9 +89,9 @@ import Application from './Application.jsx';
               </p>
           </Modal>
 
-          <div className="bg-white w-full max-w-xl flex flex-col items-center justify-center relative rounded-xl py-8 px-4 shadow-lg">
-            <h1 className="text-3xl mb-3 md:text-4xl font-extrabold mb-2 text-center text-blue-500">
-              Solicitud de Laboratorios
+          <div className="bg-white w-full max-w-xl flex flex-col items-center justify-center relative rounded-xl py-10 px-6 shadow-xl">
+            <h1 className="text-center text-blue-500 text-4xl font-extrabold leading-tight md:text-5xl mb-10">
+              Solicitud de Laboratorios <span className="inline-block">👋</span>
             </h1>
             <p className="text-base md:text-md max-w-2sm text-gray-700 mb-10 font-semibold text-center mb-4">
               {login ? 'Ingrese su correo institucional y contraseña para ingresar.'

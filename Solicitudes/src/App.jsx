@@ -7,7 +7,7 @@ import Error from './components/Error'
 import './index.css'
 
 function App() {
-  const [home, setHome] = useState(false); 
+  const [home, setHome] = useState(true); 
   const [form, setForm] = useState(false);
   const [error, setError] = useState(false);
   const [backgroundUrl, setBackgroundUrl] = useState('/fondoDARK.webp');
@@ -24,12 +24,12 @@ function App() {
         <Routes>
           {home && 
           (
-            <Route path="/home" element={<Home />}/>
+            <Route path="/home" element={<Home enableHome={setHome}/>}/>
           )}
           
           {form && 
           (
-            <Route path="/form" element={<Form/>} />
+            <Route path="/form" element={<Form enableForm={setForm}/>} />
           )}
 
           <Route 

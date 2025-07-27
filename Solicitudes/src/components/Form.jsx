@@ -12,7 +12,7 @@ const types =
   {req:'request_lab',text:'Cupo para Laboratorio'}
 ];
 
-function Formulario() {
+function Formulario({enableForm}) {
   const [form] = Form.useForm();
   const [files,setFiles] = useState();
   const request_type = Form.useWatch('request_type', form);
@@ -61,7 +61,6 @@ function Formulario() {
 
   const handleSubmit = (values) => {
     passToPDF(values,files,classes);
-
   };
 
   
