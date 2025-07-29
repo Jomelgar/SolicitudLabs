@@ -13,14 +13,17 @@
     "@ant-design/icons": "^6.0.0",
     "@supabase/supabase-js": "^2.52.1",
     "antd": "^5.26.6",
+    "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.0",
     "email-validator": "^2.0.4",
     "emailjs-com": "^3.2.0",
+    "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.0",
-    "supabase": "^2.31.8"
+    "supabase": "^2.31.8",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

@@ -1,7 +1,7 @@
 import React from 'react';
 import logo from '/UT.png';
 
-const PdfTemplate = ({ values, context, course_name, lab_section, fileUrl }) => {
+const PdfTemplate = ({ values, context, course_name, lab_section='', want_section, fileUrl }) => {
   const full_name = `${values.first_name} ${values.second_name || ''} ${values.last_name} ${values.second_last_name || ''}`.trim();
 
   return (
@@ -53,7 +53,7 @@ const PdfTemplate = ({ values, context, course_name, lab_section, fileUrl }) => 
         </p>
       )}
 
-      <p><strong>Laboratorio solicitado:</strong> {values.want_class}</p>
+      <p><strong>Laboratorio solicitado:</strong> {want_section}</p>
 
       {/* Sección de Justificación enmarcada */}
       <div

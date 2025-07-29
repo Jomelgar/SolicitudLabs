@@ -4,6 +4,7 @@ import { Modal, Button } from 'antd';
 import { ExclamationCircleOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import supabase from '../utils/supabaseClient';
+import { comparePasswords } from '../utils/authUtils.js';
 import * as EmailValidator from 'email-validator';
 import Application from './Application.jsx';
 
@@ -46,8 +47,8 @@ import Application from './Application.jsx';
       };
 
       const handleLogin = async() => {
-        const {data,error} = await supabase.from('user').select('*').eq('email', email).eq('password', password);
-        if(data.length > 0)
+        const {data,error} = await supabase.from('user').select('*').eq('email', email);
+        if(data.length === 1 && comparePasswords(password,data?.password || ''))
         {
           enableHome(true);
           setEmail('');
@@ -113,11 +114,11 @@ import Application from './Application.jsx';
                     placeholder="Contraseña"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="border border-gray-300 rounded-md p-2 mb-4 w-full"
+                    className="px-5 border border-gray-300 rounded-md p-2 mb-4 w-[100%]"
                   />
                   <button
                     type="button"
-                    className="absolute right-2 -translate-y-2 text-gray-500"
+                    className="absolute right-2 -translate-y-2 text-gray-500 "
                     onClick={() => setShowPassword((prev) => !prev)}
                     tabIndex={-1}
                   >

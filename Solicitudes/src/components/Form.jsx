@@ -1,8 +1,9 @@
-import { Form, Input, Row, Col, Typography, Card,Button,Select,Radio,Upload, message} from 'antd';
+import { Form, Input, Row, Col, Typography, Card,Button,Select,Radio,Upload,Spin, message} from 'antd';
 import supabase from '../utils/supabaseClient';
 import { UploadOutlined } from '@ant-design/icons';
 import { useState,useEffect, use } from 'react';
 import passToPDF from '../utils/toPdf.jsx';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
@@ -14,6 +15,8 @@ const types =
 
 function Formulario({enableForm}) {
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false); 
+  const [approved,setApproved] = useState(false); 
   const [files,setFiles] = useState();
   const request_type = Form.useWatch('request_type', form);
   const [classes, setClasses] = useState([]);
@@ -28,16 +31,16 @@ function Formulario({enableForm}) {
       }
   };
 
-  const fetchClassSections = async () => {
-    const {data,error} = await supabase.from('class_section').select('id,name');
-    if(data.length > 0)
-    {
-      setClassSections(data);
-    }
+  const fetchClassSections = async (id) => {
+    const {data,error} = await supabase.from('class_section').select('*').eq('class_id',id);
+    setClassSections(data);
+    form.setFieldsValue({ section: undefined });
   };
 
-  const fetchLabSections = async() =>{
-    const {data, error} = await supabase.from().select('id,name,schedule');
+  const fetchLabSections = async(id) =>{
+    const {data, error} = await supabase.from('lab_section').select('*').eq('class_id',id);
+    setLabSections(data || []);
+    form.setFieldsValue({want_class: undefined, lab_section: undefined})
   };
 
   const beforeUpload = (file) => {
@@ -59,12 +62,65 @@ function Formulario({enableForm}) {
     fetchClasses();
   }, []);
 
-  const handleSubmit = (values) => {
-    passToPDF(values,files,classes);
+  const getLabSection= async(id)=>
+  {
+      const {data,error} = await supabase.from('lab_section').select('section').eq('id',id);
+      if(data.length > 0)
+      {
+        return data[0].section;
+      }
+      return '';
+  }
+
+ const handleSubmit = async (values) => {
+    try {
+      setLoading(true); // Mostrar spinner
+
+      const in_section = await getLabSection(values?.lab_section || '1');
+      const want_section = await getLabSection(values.want_class);
+      const pdfBlob = await passToPDF(values, files, classes, { in_section, want_section });
+
+      const blobToBase64 = (blob) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64data = reader.result.split(',')[1];
+            resolve(base64data);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+      const base64 = await blobToBase64(pdfBlob);
+      const today = new Date().toISOString().slice(0, 10);
+
+      const response = await fetch(import.meta.env.VITE_URL_POWER_AUTOMATE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: `solicitud-${values.first_name + values.last_name}-${today}.pdf`,
+          base64File: base64
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error al subir archivo:', response.status, errorText);
+        message.error('Error al subir archivo');
+      } else {
+        const {error} = supabase.from('student').insert({}).select().single();
+      }
+    } catch (err) {
+      console.error('Error en el envío:', err);
+      message.error('Ocurrió un error al enviar el formulario');
+    } finally {
+      setLoading(false); // Ocultar spinner
+    }
   };
 
   
   return (
+    <Spin spinning={loading} tip="Enviando solicitud..."> 
     <Row justify="center" align="middle" style={{ minHeight: '100vh' }}>
       <Col xs={24} sm={22} md={20} lg={16} xl={12}>
         <Card
@@ -82,7 +138,7 @@ function Formulario({enableForm}) {
           className="rounded-none md:rounded-lg xl:rounded-xl"
           style={{ backgroundColor: '#f0f2f5', padding: '24px' }}
         >
-          <Form layout="vertical" form={form} onFinish={(allValues) => handleSubmit(allValues.values)} onFinishFailed={(allValues) => handleSubmit(allValues.values)}>
+          <Form layout="vertical" form={form} onFinish={(allValues) => handleSubmit(allValues)}>
             <Card className='mb-4'
               title={<h2 className='text-black  '>Información  Personal</h2>}
               bordered={false}
@@ -163,7 +219,7 @@ function Formulario({enableForm}) {
                           name="have_class"
                           rules={[{ required: true, message: 'Este campo es obligatorio' }]}
                       >
-                          <Select name='have_class' placeholder='Clase'>
+                          <Select name='have_class' placeholder='Clase' onChange={(value)=> {fetchClassSections(value); fetchLabSections(value)}}>
                             {classes.map((item) => (
                               <Select.Option key={item.id} value={item.id}>
                                 {item.name}
@@ -177,7 +233,18 @@ function Formulario({enableForm}) {
                       <Form.Item label='Sección de Clase' name='section' 
                           rules={[{ required: true, message: 'Este campo es obligatorio' }]}
                       >
-                          <Select placeholder='Sección de Clase'/>
+                          <Select
+                            name='section' 
+                            placeholder='Sección de Clase' 
+                            disabled={classSections.length === 0}
+                          >
+                            {classSections.map((item)=>(
+                                <Select.Option key={item.id} value={item.id}>
+                                  {item.section} {item.trimester}
+                                </Select.Option>
+                              ))
+                            }
+                          </Select>
                       </Form.Item>
                       
                   </Col>
@@ -190,16 +257,30 @@ function Formulario({enableForm}) {
                     <Form.Item label='Sección de Laboratorio' name='lab_section' 
                       rules={[{ required: true, message: 'Este campo es obligatorio' }]}
                   >
-                      <Select placeholder='Sección de Laboratorio' options={[]}/>
+                      <Select placeholder='Sección de Laboratorio' disabled={labSections.length === 0}>
+                        {labSections.map((item)=>(
+                              <Select.Option key={item.id} value={item.id}>
+                                {item.section} {item.trimester}, {item.start_schedule.slice(0,5)}-{item.end_schedule.slice(0,5)}
+                              </Select.Option>
+                          ))
+                        }
+                      </Select>
                   </Form.Item>
                   </Col>
                 )}
               </Row>
-              {/* Clase que desea cursar */}
+              {/* Laboratorio que desea cursar */}
               <Form.Item label='Laboratorio solicitado' name='want_class' 
                 rules={[{ required: true, message: 'Este campo es obligatorio' }]}
               >
-                <Select placeholder='Laboratorio solicitado' options={[]} />
+                <Select placeholder='Laboratorio solicitado' disabled={labSections.length === 0}>
+                  {labSections.map((item)=>(
+                    <Select.Option key={item.id} value={item.id}>
+                    {item.section} {item.trimester}, {item.start_schedule.slice(0,5)}-{item.end_schedule.slice(0,5)}
+                    </Select.Option>
+                  ))
+                  }
+                </Select>
               </Form.Item>
               {/* Justificación */}
               <Form.Item label='Justificación' name='justification'
@@ -211,7 +292,6 @@ function Formulario({enableForm}) {
               <Form.Item
                 label="Adjuntar Archivo"
                 name="attach_file"
-                rules={[{ required: true, message: "Este campo es obligatorio" }]}
               >
                 <p className='mb-4'>(Imagenes como: Captura de Pantalla, Hojas de Confirmacion, Constancia de Trabajo)</p>
                 <Upload beforeUpload={(file) => beforeUpload(file)} showUploadList={{ showRemoveIcon: true }} maxCount={1}>
@@ -227,6 +307,7 @@ function Formulario({enableForm}) {
         </Card>
       </Col>
     </Row>
+    </Spin>
   );
 }
 

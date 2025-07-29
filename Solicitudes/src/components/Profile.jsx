@@ -24,7 +24,7 @@ function Profile() {
             layout="vertical"
             onFinish={handleSubmit}
             initialValues={{
-                email: "usuario@ejemplo.com",
+                email: "usuario@ejemplo",
             }}
             >
             <Form.Item label="Correo electrónico">

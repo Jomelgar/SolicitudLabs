@@ -12,13 +12,15 @@ import {
   MenuFoldOutlined
 } from "@ant-design/icons";
 import Profile from "./Profile";
+import Sections from './classSections';
+import Labs from './labSections';
 import logo from "/UT.png";
 
 const { Header, Sider, Content } = Layout;
 
 function Home({ enableHome }) {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState("casos");
+  const [activeView, setActiveView] = useState("cases");
   const [collapsed, setCollapsed] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -87,8 +89,8 @@ function Home({ enableHome }) {
 
             <Content className="m-6 bg-white min-h-[360px] rounded-xl p-6">
               {activeView === "cases" && <div className="text-lg">Listado de casos</div>}
-              {activeView === "clases" && <div className="text-lg">Secciones de clase</div>}
-              {activeView === "labs" && <div className="text-lg">Secciones de laboratorio</div>}
+              {activeView === "clases" && <Sections/>}
+              {activeView === "labs" && <Labs/>}
               {activeView === "usuarios" && <div className="text-lg">Gestión de usuarios</div>}
               {activeView === "profile" && <Profile />}
             </Content>
