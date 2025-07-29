@@ -5,8 +5,8 @@ import PdfTemplate from './caseTemplate.jsx';
 import supabase from './supabaseClient.js';
 
 const types = [
-  { req: 'change_lab', text: 'Cambio de laboratorio' },
-  { req: 'request_lab', text: 'cupo para laboratorio' }
+  { req: 'change_lab', title: 'Cambio de Laboratorio',text: 'cambio de laboratorio' },
+  { req: 'request_lab', title:'Cupo para Laboratorio',text: 'cupo para laboratorio' }
 ];
 
 const passToPDF = async (values, file, classes = [], { in_section, want_section }) => {
@@ -21,9 +21,7 @@ const passToPDF = async (values, file, classes = [], { in_section, want_section 
       reader.readAsDataURL(file);
     });
   }
-
-  // Renderizar el componente React a HTML estático
-  const html = ReactDOMServer.renderToStaticMarkup(
+ const html = ReactDOMServer.renderToStaticMarkup(
     <PdfTemplate
       values={values}
       context={context}
@@ -34,35 +32,43 @@ const passToPDF = async (values, file, classes = [], { in_section, want_section 
     />
   );
 
-  // Crear elemento DOM temporal y agregarlo al body
   const element = document.createElement("div");
+  element.style.width = '595px'; // ancho A4
   element.innerHTML = html;
   document.body.appendChild(element);
 
-  // Esperar un poco para que el DOM se "pinte" (opcional pero recomendado)
-  await new Promise((r) => setTimeout(r, 100));
+  await new Promise((r) => setTimeout(r, 300));
 
-  // Usar html2canvas para capturar el elemento
-  const canvas = await html2canvas(element, { scale: 2 });
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    width: element.offsetWidth,
+    height: element.offsetHeight,
+    scrollY: -window.scrollY,
+  });
 
-  // Obtener imagen del canvas
   const imgData = canvas.toDataURL("image/jpeg", 0.98);
 
-  // Crear documento jsPDF (Letter, pulgadas)
-  const pdf = new jsPDF("portrait", "in", "letter");
+  const pdf = new jsPDF("portrait", "in", "a4");
+  const margin = 0.5;
+  const pdfWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+  const pdfHeight = pdf.internal.pageSize.getHeight() - margin * 2;
 
-  // Calcular proporción para que la imagen ocupe todo el ancho
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  const ratio = canvas.width / canvas.height;
 
-  // Agregar imagen al PDF
-  pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+  let imgWidth = pdfWidth;
+  let imgHeight = pdfWidth / ratio;
 
-  // Eliminar el elemento temporal del DOM
+  if (imgHeight > pdfHeight) {
+    imgHeight = pdfHeight;
+    imgWidth = pdfHeight * ratio;
+  }
+
+  pdf.addImage(imgData, "JPEG", margin, margin, imgWidth, imgHeight);
+
   element.remove();
 
-  // Devolver el Blob PDF
   const pdfBlob = pdf.output("blob");
+
   return pdfBlob;
 };
 

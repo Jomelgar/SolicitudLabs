@@ -1,7 +1,7 @@
 import React from 'react';
 import logo from '/UT.png';
 
-const PdfTemplate = ({ values, context, course_name, lab_section='', want_section, fileUrl }) => {
+const PdfTemplate = ({ values, context, course_name, lab_section, fileUrl }) => {
   const full_name = `${values.first_name} ${values.second_name || ''} ${values.last_name} ${values.second_last_name || ''}`.trim();
 
   return (
@@ -22,7 +22,7 @@ const PdfTemplate = ({ values, context, course_name, lab_section='', want_sectio
 
       {/* Encabezado */}
       <h1 style={{ color: '#1e40af', marginBottom: '10px', text: '32px' }}>
-        Formulario de Solicitud - {context?.text}
+        Formulario de Solicitud - {context?.title}
       </h1>
 
       {/* Línea separadora */}
@@ -53,7 +53,7 @@ const PdfTemplate = ({ values, context, course_name, lab_section='', want_sectio
         </p>
       )}
 
-      <p><strong>Laboratorio solicitado:</strong> {want_section}</p>
+      <p><strong>Laboratorio solicitado:</strong> {values.want_class}</p>
 
       {/* Sección de Justificación enmarcada */}
       <div
@@ -69,7 +69,6 @@ const PdfTemplate = ({ values, context, course_name, lab_section='', want_sectio
       </div>
 
       {/* Archivo Adjunto (si existe) */}
-      {fileUrl && (
         <div style={{ marginTop: '40px', textAlign: 'center' }}>
           <h3 style={{ color: '#1e40af', marginBottom: '20px' }}>Archivo Adjunto</h3>
           <img
@@ -87,7 +86,6 @@ const PdfTemplate = ({ values, context, course_name, lab_section='', want_sectio
             }}
           />
         </div>
-      )}
     </div>
   );
 };
