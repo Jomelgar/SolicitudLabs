@@ -1,7 +1,8 @@
   import { Form, Input, Row, Col, Typography, Card,Button,Select,Radio,Upload,Spin, message} from 'antd';
   import supabase from '../utils/supabaseClient';
-  import { UploadOutlined } from '@ant-design/icons';
+  import { UploadOutlined, CheckCircleFilled } from '@ant-design/icons';
   import { useState,useEffect, use } from 'react';
+  import { useNavigate } from "react-router-dom";
   import passToPDF from '../utils/toPdf.jsx';
   import dayjs from 'dayjs';
 
@@ -14,8 +15,9 @@
   ];
 
   function Formulario({enableForm}) {
+    const navigate = useNavigate();
     const [form] = Form.useForm();
-    const [formSubmitted, setFormSubmitted] = useState(false);
+    const [formSubmitted, setFormSubmitted] = useState(true);
     const [loading, setLoading] = useState(false); 
     const [approved,setApproved] = useState(false); 
     const [files,setFiles] = useState();
@@ -148,9 +150,18 @@
         <Col xs={24} sm={22} md={20} lg={16} xl={12}>
           {formSubmitted ? (
             <Card className='text-center p-6'>
-              <Title level={3} className='text-green-600'>¡Solicitud enviada con éxito!</Title>
-              <p className='mb-4 text-gray-700'>Tu solicitud ha sido enviada correctamente. Ahora solo queda esperar la respuesta del equipo encargado.</p>
-              <Button type="primary" onClick={() => window.location.href = '/dashboard'}>Ir al Panel Principal</Button>
+              {/* Imagen de fondo transparente */}
+              <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center">
+                <img
+                  src="/UT.png"
+                  alt="Error 404"
+                  className="w-3/4 max-w-xs opacity-10 object-contain"
+                />
+              </div>
+              <Title level={3} className='!text-5xl !text-black !font-extrabold'>¡Solicitud enviada con éxito!</Title>
+              <CheckCircleFilled className='text-green-800 bg-yellow-200 rounded-full text-9xl mt-3 mb-3'/>
+              <p className='mb-4 text-gray-700 text-md'>Tu solicitud ha sido enviada correctamente. Ahora solo queda esperar la respuesta del equipo encargado.</p>
+              <Button className='text-xl w-[50%] font-bold' type="primary" onClick={() => navigate('/')}>Ir al Panel Principal</Button>
             </Card>
           ):(
             <Card

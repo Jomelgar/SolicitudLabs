@@ -127,7 +127,7 @@ const classSections = () => {
   return (
     <div className="p-4">
       <Card
-        title="Secciones de Laboratorios"
+        title={<h1 className="font-bold">Secciones de Laboratorios</h1>}
         extra={
           <div className="flex space-x-5">
           <Button

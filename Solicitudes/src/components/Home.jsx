@@ -13,7 +13,8 @@ import {
 } from "@ant-design/icons";
 import Profile from "./Profile";
 import Sections from './classSections';
-import Labs from './labSections';
+import Labs from './labSections'
+import Cases from './Cases';
 import logo from "/UT.png";
 
 const { Header, Sider, Content } = Layout;
@@ -87,8 +88,8 @@ function Home({ enableHome }) {
               <h2 className="m-0 text-sm md:text-xl lg:text-2xlw-full font-semibold">Panel de Administración</h2>
             </Header>
 
-            <Content className="m-6 bg-white min-h-[360px] rounded-xl p-6">
-              {activeView === "cases" && <div className="text-lg">Listado de casos</div>}
+            <Content className="m-6 bg-white min-h-[360px] w-full rounded-xl p-6">
+              {activeView === "cases" && <Cases/>}
               {activeView === "clases" && <Sections/>}
               {activeView === "labs" && <Labs/>}
               {activeView === "usuarios" && <div className="text-lg">Gestión de usuarios</div>}
