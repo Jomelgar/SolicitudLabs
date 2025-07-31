@@ -15,6 +15,7 @@ import Profile from "./Profile";
 import Sections from './classSections';
 import Labs from './labSections'
 import Cases from './Cases';
+import Users from './Users';
 import logo from "/UT.png";
 
 const { Header, Sider, Content } = Layout;
@@ -22,6 +23,7 @@ const { Header, Sider, Content } = Layout;
 function Home({ enableHome }) {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState("cases");
+  const [id,setId] = useState();
   const [collapsed, setCollapsed] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -92,8 +94,8 @@ function Home({ enableHome }) {
               {activeView === "cases" && <Cases/>}
               {activeView === "clases" && <Sections/>}
               {activeView === "labs" && <Labs/>}
-              {activeView === "usuarios" && <div className="text-lg">Gestión de usuarios</div>}
-              {activeView === "profile" && <Profile />}
+              {activeView === "usuarios" && <Users view={(id) => {setId(id); setActiveView('profile');}}/>}
+              {activeView === "profile" && <Profile id={id}/>}
             </Content>
           </Layout>
         </Layout>

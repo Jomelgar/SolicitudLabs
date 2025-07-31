@@ -9,26 +9,21 @@ import * as XLSX from 'xlsx';
  * @param {boolean} isBuffer - Si true, input es buffer, sino ruta
  * @returns {{ labSections: Array, classReferences: Array }}
  */
-export function readLabSectionExcel(input, isBuffer = false) {
-  const workbook = isBuffer
-    ? XLSX.read(input, { type: 'buffer' })
-    : XLSX.readFile(input);
+export async function readLabSectionExcel(file) {
+  const data = await file.arrayBuffer(); 
+  const workbook = XLSX.read(data, { type: 'array' });
 
-  const labSections = workbook.Sheets['lab_section']
-    ? XLSX.utils.sheet_to_json(workbook.Sheets['lab_section'])
+  const labSections = workbook.Sheets['Laboratorios']
+    ? XLSX.utils.sheet_to_json(workbook.Sheets['Laboratorios'])
     : [];
 
-  const classReferences = workbook.Sheets['class_reference']
-    ? XLSX.utils.sheet_to_json(workbook.Sheets['class_reference'])
-    : [];
-
-  return { labSections, classReferences };
+  return labSections;
 }
 
 export function downloadLabSectionTemplateExcel(classReferenceData) {
   // Plantilla vacía para lab_section
   const labSectionTemplate = [
-    { Id_Clase: '0', Seccion: '0000', Trimestre: 'Q1',Empieza: '8:10:00', Termina: '9:55:00' }
+    { Id_Clase: '0', Seccion: '0000', Trimestre: 'Q1',Dia: 'Lunes',Empieza: '8:10:00', Termina: '9:55:00'}
   ];
 
   const workbook = XLSX.utils.book_new();
@@ -60,6 +55,17 @@ export function downloadLabSectionTemplateExcel(classReferenceData) {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   }, 0);
+}
+
+export async function readClassSectionExcel(file) {
+  const data = await file.arrayBuffer(); 
+  const workbook = XLSX.read(data, { type: 'array' });
+
+  const labSections = workbook.Sheets['Secciones de Clase']
+    ? XLSX.utils.sheet_to_json(workbook.Sheets['Secciones de Clase'])
+    : [];
+
+  return labSections;
 }
 
 export function downloadClassSectionTemplateExcel(classReferenceData) {

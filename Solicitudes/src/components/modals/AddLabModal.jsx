@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Select,Col,Row, TimePicker} from "antd";
 import supabase from '../../utils/supabaseClient';
 
 const trimester=['Q1','Q2','Q3','Q4'];
+const days=['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado','Domingo'];
 
 const AddLabModal = ({ open, onCancel, onAdd }) => {
   const [form] = Form.useForm();
@@ -48,7 +49,7 @@ const AddLabModal = ({ open, onCancel, onAdd }) => {
           name="class"
           rules={[{ required: true, message: "Seleccione una clase" }]}
         >
-          <Select placeholder="Selecciona una clase">
+          <Select placeholder="Clase">
             {classes.map((item) => (
               <Select.Option key={item.id} value={item.id}>
                 {item.name}
@@ -64,7 +65,7 @@ const AddLabModal = ({ open, onCancel, onAdd }) => {
               name="start_schedule"
               rules={[{ required: true, message: "Seleccione un horario" }]}
             >
-              <TimePicker format="HH:mm" style={{ width: '100%' }} />
+              <TimePicker placeholder='Hora' format="HH:mm" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col xs={12}>
@@ -73,7 +74,7 @@ const AddLabModal = ({ open, onCancel, onAdd }) => {
               name="end_schedule"
               rules={[{ required: true, message: "Seleccione un horario" }]}
             >
-              <TimePicker format="HH:mm" style={{ width: '100%' }} />
+              <TimePicker placeholder='Hora' format="HH:mm" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
         </Row>
@@ -85,7 +86,7 @@ const AddLabModal = ({ open, onCancel, onAdd }) => {
                 name="trimester"
                 rules={[{ required: true, message: "Seleccione un trimestre" }]}
                 >
-                <Select placeholder="Selecciona una clase">
+                <Select placeholder="Trimestre">
                     {trimester.map((item) => (
                     <Select.Option key={item} value={item}>
                         {item}
@@ -97,24 +98,37 @@ const AddLabModal = ({ open, onCancel, onAdd }) => {
 
             <Col xs={12}>
                 <Form.Item
-                label="Sección"
-                name="section"
-                rules={[{ required: true, message: "Ingrese la sección" }]}
+                label="Día"
+                name="day"
+                rules={[{ required: true, message: "Seleccione un día" }]}
                 >
-                <Input
-                    type="number"
-                    min="0"
-                    step="1"
-                    onKeyDown={(e) => {
-                    if (e.key === '.' || e.key === ',' || e.key === 'e') {
-                        e.preventDefault();
-                    }
-                    }}
-                />
+                  <Select placeholder="Día">
+                      {days.map((item) => (
+                      <Select.Option key={item} value={item}>
+                          {item}
+                      </Select.Option>
+                      ))}
+                  </Select>
                 </Form.Item>
             </Col>
         </Row>
-        
+        <Form.Item
+        label="Sección"
+        name="section"
+        rules={[{ required: true, message: "Ingrese la sección" }]}
+        >
+        <Input
+            type="number"
+            placeholder="Sección"
+            min="0"
+            step="1"
+            onKeyDown={(e) => {
+            if (e.key === '.' || e.key === ',' || e.key === 'e') {
+                e.preventDefault();
+            }
+            }}
+        />
+        </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" block>
             Agregar

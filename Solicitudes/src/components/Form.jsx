@@ -4,6 +4,7 @@
   import { useState,useEffect, use } from 'react';
   import { useNavigate } from "react-router-dom";
   import passToPDF from '../utils/toPdf.jsx';
+  import {sendNotificationStudent, sendNotificationUser} from '../utils/email';
   import dayjs from 'dayjs';
 
   const { Title } = Typography;
@@ -17,7 +18,7 @@
   function Formulario({enableForm}) {
     const navigate = useNavigate();
     const [form] = Form.useForm();
-    const [formSubmitted, setFormSubmitted] = useState(true);
+    const [formSubmitted, setFormSubmitted] = useState(false);
     const [loading, setLoading] = useState(false); 
     const [approved,setApproved] = useState(false); 
     const [files,setFiles] = useState();
@@ -25,7 +26,7 @@
     const [classes, setClasses] = useState([]);
     const [classSections,setClassSections] = useState([]);
     const [labSections,setLabSections] = useState([]);
-
+    
     //Fetches
     const fetchClasses = async () => {
         const { data, error } = await supabase.from('class').select('*');
@@ -45,6 +46,29 @@
       setLabSections(data || []);
       form.setFieldsValue({want_class: undefined, lab_section: undefined})
     };
+
+    //Functions
+
+    const searchStudent = async (numeroCuenta) => {
+    if (!numeroCuenta) return;
+    const { data, error } = await supabase
+      .from('student')
+      .select('*')
+      .eq('account_number', numeroCuenta)
+      .single();
+
+    if (data) {
+      form.setFieldsValue({
+        first_name: data.first_name,
+        second_name: data.second_name,
+        last_name: data.last_name,
+        second_last_name: data.second_last_name,
+        email: data.email,
+      });
+    } else if (error) {
+      console.log('Estudiante no encontrado');
+    }
+  };
 
     const beforeUpload = (file) => {
       const validTypes = [
@@ -67,82 +91,154 @@
 
     const getLabSection= async(id)=>
     {
-        const {data,error} = await supabase.from('lab_section').select('section').eq('id',id);
+        const {data,error} = await supabase.from('lab_section').select('section,start_schedule,end_schedule,day').eq('id',id);
         if(data.length > 0)
         {
-          return data[0].section;
+          return data[0].section + ", " + data[0].day+' de ' + data[0].start_schedule.slice(0,5)+ '-' + data[0].end_schedule.slice(0,5);
         }
         return '';
     }
 
   const handleSubmit = async (values) => {
+      setLoading(true);
       try {
-        setLoading(true); // Mostrar spinner
+        // 1. Obtener contexto del tipo de solicitud
         const context = types.find((item) => item.req === values.request_type);
+        const now = new Date();
+        const today = now.toISOString().slice(0, 19).replace('T', '_');
+
+        // 2. Obtener secciones
         const in_section = await getLabSection(values?.lab_section || '1');
         const want_section = await getLabSection(values.want_class);
+
+        // 3. Generar PDF
         const pdfBlob = await passToPDF(values, files, classes, { in_section, want_section });
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfBlob);
+        });
 
-        const blobToBase64 = (blob) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              const base64data = reader.result.split(',')[1];
-              resolve(base64data);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
-
-        const base64 = await blobToBase64(pdfBlob);
-        const today = new Date().toISOString().slice(0, 10);
-
+        // 4. Enviar PDF al flujo de Power Automate
         const response = await fetch(import.meta.env.VITE_URL_POWER_AUTOMATE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             fileName: `solicitud-${values.account_number}-${today}.pdf`,
-            base64File: base64
+            base64File: base64,
           }),
         });
-        const url = await response.json();
-        if (!response.ok) {
+
+        const { pdfUrl } = await response.json();
+        if (!response.ok || !pdfUrl) {
           const errorText = await response.text();
-          console.error('Error al subir archivo:', response.status, errorText);
-          message.error('Error al subir archivo');
-        } else {
-          const {data: student, error: student_error} = await supabase.from('student').insert({
-            account_number: values.account_number,
-            first_name: values.first_name,
-            second_name: values.second_name,
-            last_name: values.last_name,
-            second_last_name: values.second_last_name,
-            email: values.email
-          }).select().single(); 
-          if(student_error)
-          {
-            return;
-          }
-          const {data, error} = await supabase.from('case').insert(
-            {
-              type: context?.text,
-              justification: values.justification,
-              url: url?.pdfUrl,
-              from_lab_section: values?.lab_section,
-              to_lab_section:values.want_class,
-              student_id: student.id,
-              class_section_id: values.section
-            });
+          throw new Error(`Error al subir archivo: ${errorText}`);
         }
+
+        // 5. Buscar si el estudiante ya existe
+        const { data: existingStudent } = await supabase
+          .from('student')
+          .select('*')
+          .eq('account_number', values.account_number)
+          .single();
+
+        // 6. Insertar estudiante si no existe
+        let student = existingStudent;
+        if (!student) {
+          const { data: newStudent, error: studentError } = await supabase
+            .from('student')
+            .insert({
+              account_number: values.account_number,
+              first_name: values.first_name,
+              second_name: values.second_name,
+              last_name: values.last_name,
+              second_last_name: values.second_last_name,
+              email: values.email,
+            })
+            .select()
+            .single();
+
+          if (studentError) {
+            throw new Error('Error al guardar el estudiante');
+          }
+          student = newStudent;
+        }
+        else
+        {
+          const { data: newStudent, error: studentError } = await supabase
+            .from('student').update({
+              account_number: values.account_number,
+              first_name: values.first_name,
+              second_name: values.second_name,
+              last_name: values.last_name,
+              second_last_name: values.second_last_name,
+              email: values.email,
+            }).eq('id', student.id).select().single();
+            student = newStudent;
+        }
+
+        // 7. Guardar el caso
+        const { data: caseData, error: caseError } = await supabase
+          .from('case')
+          .insert({
+            type: context?.text,
+            justification: values.justification,
+            url: pdfUrl,
+            from_lab_section: values?.lab_section,
+            to_lab_section: values.want_class,
+            student_id: student.id,
+            class_section_id: values.section,
+          })
+          .select()
+          .single();
+
+        if (caseError || !caseData) {
+          throw new Error('Error al guardar el caso');
+        }
+
+        // 8. Enviar notificación
+        const baseURL = `${window.location.origin}`;
+        const caseUrl = `${baseURL}/solicitudes/${caseData.id}`;
+        const msg = 'Revise con la URL su caso.';
+
+        await sendNotificationStudent(
+          caseData.type,
+          caseData.id,
+          want_section,
+          caseUrl,
+          student.first_name,
+          student.last_name,
+          student.email,
+          msg
+        );
+
+        const {data: dataUser,error: errorUser} = await supabase.from('user').select('*');
+
+        if(!errorUser)
+        {
+          const msgUser = 'La siguiente URL es un resumen del caso, se le solicita dar una respuesta lo antes posible.';
+          for (const item of dataUser) {
+            await sendNotificationUser(
+              caseData.type,
+              caseData.id,
+              want_section,
+              caseUrl,
+              item.email,
+              msgUser
+            );
+          }
+        }
+
+        message.success('Solicitud enviada correctamente');
+        setFormSubmitted(true);
       } catch (err) {
-        console.error('Error en el envío:', err);
-        message.error('Ocurrió un error al enviar el formulario');
+        console.error(err);
+        message.error(err.message || 'Ocurrió un error al enviar el formulario');
       } finally {
         setLoading(false);
-        setFormSubmitted(true);
       }
     };
-
     
     return (
       <Spin spinning={loading} tip="Enviando solicitud..."> 
@@ -161,7 +257,7 @@
               <Title level={3} className='!text-5xl !text-black !font-extrabold'>¡Solicitud enviada con éxito!</Title>
               <CheckCircleFilled className='text-green-800 bg-yellow-200 rounded-full text-9xl mt-3 mb-3'/>
               <p className='mb-4 text-gray-700 text-md'>Tu solicitud ha sido enviada correctamente. Ahora solo queda esperar la respuesta del equipo encargado.</p>
-              <Button className='text-xl w-[50%] font-bold' type="primary" onClick={() => navigate('/')}>Ir al Panel Principal</Button>
+              <Button className='mt-5 text-xl w-[40%] h-10 font-bold ' type="primary" onClick={() => navigate('/')}>Ir a Inicio</Button>
             </Card>
           ):(
             <Card
@@ -190,7 +286,7 @@
                   name="account_number"
                   rules={[{ required: true, message: 'Este campo es obligatorio' }]}
                 >
-                  <Input type='number' placeholder="Número de Cuenta" />
+                  <Input type='number' placeholder="Número de Cuenta" onChange={(e)=>searchStudent(e.target.value)} />
                 </Form.Item>
 
                 {/* Primer y Segundo Nombre */}
@@ -303,7 +399,7 @@
                         <Select placeholder='Sección de Laboratorio' disabled={labSections.length === 0}>
                           {labSections.map((item)=>(
                                 <Select.Option key={item.id} value={item.id}>
-                                  {item.section} {item.trimester}, {item.start_schedule.slice(0,5)}-{item.end_schedule.slice(0,5)}
+                                  {item.section} {item.day} {item.start_schedule.slice(0,5)}-{item.end_schedule.slice(0,5)}
                                 </Select.Option>
                             ))
                           }
@@ -319,7 +415,7 @@
                   <Select placeholder='Laboratorio solicitado' disabled={labSections.length === 0}>
                     {labSections.map((item)=>(
                       <Select.Option key={item.id} value={item.id}>
-                      {item.section} {item.trimester}, {item.start_schedule.slice(0,5)}-{item.end_schedule.slice(0,5)}
+                      {item.section} {item.day} {item.start_schedule.slice(0,5)}-{item.end_schedule.slice(0,5)}
                       </Select.Option>
                     ))
                     }
@@ -333,7 +429,7 @@
                 </Form.Item>
                 {/* Adjuntar Archivo */}
                 <Form.Item
-                  label="Adjuntar Archivo"
+                  label="Adjuntar Archivo (Constancias, Hojas de Confirmación, Capturas de Pantalla,etc.)"
                   name="attach_file"
                   rules={[{ required: true, message: 'Este campo es obligatorio' }]}
                   valuePropName="fileList"

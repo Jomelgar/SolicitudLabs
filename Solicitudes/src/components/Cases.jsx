@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Table, Card, Button, message, Space } from "antd";
+import { Table, Card, Button, message, Space,Spin } from "antd";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import supabase from "../utils/supabaseClient";
 
 const Cases = () => {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     const { data, error } = await supabase
@@ -14,6 +15,7 @@ const Cases = () => {
       type,
       url,
       phase,
+      date,
       student (
         id,
         account_number,
@@ -35,9 +37,10 @@ const Cases = () => {
     if (error) {
       message.error("Error al cargar los casos");
       setData([]);
+      setLoading(false);
     } else {
       setData(data);
-      console.log(data);
+      setLoading(false);
     }
   };
 
@@ -158,19 +161,21 @@ const Cases = () => {
   }, []);
 
   return (
-    <div className="p-4">
+    <div className="p-4 h-full">
         <Card
         title={<h1 className="font-bold">Solicitudes de Casos</h1>}
-        className="rounded-2xl shadow-md w-full"
+        className="rounded-2xl shadow-md w-full h-full"
         style={{ maxWidth: "100%", overflowX: "auto" }}
         >
-        <Table
-            columns={columns}
-            dataSource={data}
-            rowKey="id"
-            pagination={{ position: ["bottomCenter"], pageSize: 5 }}
-            scroll={{ x: "max-content" }}
-        />
+          <Spin spinning={loading}>
+            <Table
+                columns={columns}
+                dataSource={data}
+                rowKey="id"
+                pagination={{ position: ["bottomCenter"], pageSize: 5 }}
+                scroll={{ x: "max-content" }}
+            />
+          </Spin>
         </Card>
     </div>
     );

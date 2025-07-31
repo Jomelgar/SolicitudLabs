@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal, Button } from 'antd';
 import { ExclamationCircleOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
-import sendVerificationCode from '../utils/email'
-import { send } from 'emailjs-com';
+import {sendVerificationCode} from '../utils/email';
 
 
 function Application({handleVerification,process, enableForm, email})
