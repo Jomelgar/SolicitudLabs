@@ -6,6 +6,7 @@ import 'antd/dist/reset.css';
 import supabase from '../utils/supabaseClient';
 import { comparePasswords } from '../utils/authUtils.js';
 import * as EmailValidator from 'email-validator';
+import Cookies from 'js-cookie';
 import Application from './Application.jsx';
 
   function Verification({ enableHome, enableForm}) {
@@ -21,8 +22,8 @@ import Application from './Application.jsx';
 
       useEffect(() => {
           const fetchUser = async () => {
-            const {data, error} = await supabase.from('user').select('*').eq('email', email);
-            if(data.length > 0)
+            const {data, error} = await supabase.from('user').select('*').eq('email', email).single();
+            if(data)
             {
               setLogin(true);
             }else
@@ -47,9 +48,11 @@ import Application from './Application.jsx';
       };
 
       const handleLogin = async() => {
-        const {data,error} = await supabase.from('user').select('*').eq('email', email);
-        if(data.length === 1 && comparePasswords(password,data?.password || ''))
+        const {data,error} = await supabase.from('user').select('*').eq('email', email).single();
+        const comparePassword = await comparePasswords(password,data.password);
+        if(data && comparePassword)
         {
+          Cookies.set('user_id',data.id,{expires: 1, path: '/'});
           enableHome(true);
           setEmail('');
           setPassword('');
@@ -127,7 +130,7 @@ import Application from './Application.jsx';
                 </div>
                 <button 
                   className="bg-blue-800 hover:bg-blue-500 text-white rounded-md p-2 w-full max-w-xs mx-auto"
-                  onClick={(handleLogin)}  
+                  onClick={handleLogin}  
                 >
                   Ingresar
                 </button>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Layout, Menu, Card } from "antd";
 import { useNavigate } from "react-router-dom";
+import Cookies from 'js-cookie';
 import {
   DesktopOutlined,
   UserOutlined,
@@ -23,7 +24,7 @@ const { Header, Sider, Content } = Layout;
 function Home({ enableHome }) {
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState("cases");
-  const [id,setId] = useState();
+  const [id,setId] = useState(Cookies.get('user_id'));
   const [collapsed, setCollapsed] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 

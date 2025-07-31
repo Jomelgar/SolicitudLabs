@@ -7,7 +7,7 @@ import Error from './components/Error'
 import './index.css'
 
 function App() {
-  const [home, setHome] = useState(true); 
+  const [home, setHome] = useState(false); 
   const [form, setForm] = useState(false);
   const [error, setError] = useState(false);
   const [backgroundUrl, setBackgroundUrl] = useState('/fondoDARK.webp');
