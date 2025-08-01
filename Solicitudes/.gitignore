@@ -16,10 +16,10 @@ dist-ssr
 *.local
 
 # Environment variables
-.env
+#.env
 
 # Supabase client config
-src/utils/supabaseClient.js
+#src/utils/supabaseClient.js
 
 # Editor directories and files
 .vscode/*
