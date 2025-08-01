@@ -13,7 +13,6 @@ function Application({handleVerification,process, enableForm, email})
     {
         const generatedCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         setCode(generatedCode);
-        console.log("Generated Code: ", generatedCode);
         return generatedCode;
     }
     

@@ -72,7 +72,7 @@ const ClassSections = () => {
     if (!error) {
       fetchData();
     } else {
-      console.error('Error eliminando sección:', error);
+      throw new error ('Error eliminando sección:');
     }
   };
 
@@ -102,7 +102,7 @@ const ClassSections = () => {
 
     if (!isValid) {
       setLoading(false);
-      console.error("Archivo con formato inválido. Asegúrate que las columnas sean exactamente:", expectedKeys);
+      throw new error("Archivo con formato inválido. Asegúrate que las columnas sean exactamente:", expectedKeys);
       return;
     }
 
@@ -118,7 +118,7 @@ const ClassSections = () => {
     const { error } = await supabase.from('lab_section').insert(mappedData);
 
     if (error) {
-      console.error("Error al insertar los datos:", error);
+      throw new error("Error al insertar los datos:")
     } else {
       console.log("Datos importados correctamente");
     }

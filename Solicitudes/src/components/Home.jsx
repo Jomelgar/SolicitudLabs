@@ -96,7 +96,7 @@ function Home({ enableHome }) {
               {activeView === "clases" && <Sections/>}
               {activeView === "labs" && <Labs/>}
               {activeView === "usuarios" && <Users view={(id) => {setId(id); setActiveView('profile');}}/>}
-              {activeView === "profile" && <Profile id={id}/>}
+              {activeView === "profile" && <Profile id={id} setId={setId}/>}
             </Content>
           </Layout>
         </Layout>

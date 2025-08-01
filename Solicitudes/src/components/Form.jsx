@@ -15,6 +15,16 @@
     {req:'request_lab',text:'Cupo de Laboratorio'}
   ];
 
+  async function generateHashId(id) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(id.toString());
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  }
+
+
   function Formulario({enableForm}) {
     const navigate = useNavigate();
     const [form] = Form.useForm();
@@ -66,7 +76,7 @@
         email: data.email,
       });
     } else if (error) {
-      console.log('Estudiante no encontrado');
+      throw new error('Estudiante no encontrado');
     }
   };
 
@@ -197,9 +207,18 @@
           throw new Error('Error al guardar el caso');
         }
 
+        const hashId = await generateHashId(caseData.id);
+        const {error: errorUpdateCase} = await supabase.from('case')
+          .update({hash_id : hashId})
+          .eq('id',caseData.id); 
+
+        if(errorUpdateCase)
+        {
+          throw new Error('Error al guardar el caso');
+        }
         // 8. Enviar notificación
         const baseURL = `${window.location.origin}`;
-        const caseUrl = `${baseURL}/solicitudes/${caseData.id}`;
+        const caseUrl = `${baseURL}/solicitud/${hashId}`;
         const msg = 'Revise con la URL su caso.';
 
         await sendNotificationStudent(
@@ -231,10 +250,9 @@
         }
 
         message.success('Solicitud enviada correctamente');
-        setFormSubmitted(true);
+        setFormSubmitted(false);
       } catch (err) {
-        console.error(err);
-        message.error(err.message || 'Ocurrió un error al enviar el formulario');
+        message.error('Ocurrió un error al enviar el formulario');
       } finally {
         setLoading(false);
       }

@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Col,Card, Button, Spin, message, Typography, Popconfirm } from "antd";
-import { DeleteOutlined, EditOutlined, ImportOutlined, UserAddOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, ImportOutlined, UserAddOutlined, UserOutlined } from "@ant-design/icons";
 import AddUserModal from './modals/AddUserModal';
 import supabase from "../utils/supabaseClient";
 import { hashPassword} from "../utils/authUtils";
-
 const { Text } = Typography;
 
 const Users = ({view}) => {
@@ -38,7 +37,7 @@ const Users = ({view}) => {
   }
 
   const handleDelete = async (userId) => {
-    const { error } = await supabase.from("users").delete().eq("id", userId);
+    const { error } = await supabase.from("user").delete().eq("id", userId);
     if (error) {
       message.error("No se pudo eliminar el usuario");
     } else {
@@ -70,18 +69,23 @@ const Users = ({view}) => {
               <Card
                 key={user.id}
                 className="rounded-xl shadow-sm border border-gray-200"
-                title={<Text strong>{user.email}</Text>}
+                title={<Text  strong><UserOutlined className="mr-4"/>{user.email}</Text>}
               >
                 <Col>
-                  <Button icon={<EditOutlined/>} className="mr-2 !border-blue-500 !text-blue-500 hover:!border-blue-300 
-                  hover:!text-blue-300" size="small" >Editar Usuario</Button> 
+                  <Button icon={<EditOutlined/>} 
+                   className="mr-2 !border-blue-500 !text-blue-500 hover:!border-blue-300 hover:!text-blue-300"
+                   size="small"
+                   onClick={()=> {view(user.id)}} 
+                  >
+                    Editar Usuario
+                  </Button> 
                   <Popconfirm
                       title="¿Eliminar este usuario?"
                       onConfirm={() => handleDelete(user.id)}
                       okText="Sí"
                       cancelText="No"
                     >
-                      <Button danger icon={<DeleteOutlined />} size="small">Eliminar Usuario</Button>
+                      <Button danger icon={<DeleteOutlined />}size="small">Eliminar Usuario</Button>
                     </Popconfirm>
                 </Col>
               </Card>

@@ -27,7 +27,6 @@ const ExcelUploadModal = ({ visible, onClose, onImport }) => {
     }
 
     const file = fileList[0].originFileObj;
-    console.log('Archivo seleccionado:', file);
     if (onImport) {
       onImport(file);
     }

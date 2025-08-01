@@ -18,7 +18,7 @@ import Application from './Application.jsx';
       const [password, setPassword] = useState('');
       const navigate = useNavigate();
 
-      useEffect(() => {enableHome(false); enableForm(false)},[])
+      useEffect(() => {enableHome(false); enableForm(false); Cookies.remove('user_id');},[])
 
       useEffect(() => {
           const fetchUser = async () => {

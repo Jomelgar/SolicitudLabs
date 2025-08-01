@@ -5,9 +5,11 @@ import Home from './components/Home'
 import Form from './components/Form'
 import Error from './components/Error'
 import './index.css'
+import InformationCase from './components/InformationCase'
+import Cookies from 'js-cookie'
 
 function App() {
-  const [home, setHome] = useState(false); 
+  const [home, setHome] = useState(Cookies.get('user_id') !== null && Cookies.get('user_id') !== undefined); 
   const [form, setForm] = useState(false);
   const [error, setError] = useState(false);
   const [backgroundUrl, setBackgroundUrl] = useState('/fondoDARK.webp');
@@ -36,6 +38,10 @@ function App() {
             path="/"
             element={<Verification home={home} enableHome={setHome} setBackgroundUrl={setBackgroundUrl} enableForm={setForm}/>}
           /> 
+          <Route
+            path='/solicitud/:id'
+            element={<InformationCase/>}
+          />
           <Route 
             path='*' 
             element={<Error/>} 
